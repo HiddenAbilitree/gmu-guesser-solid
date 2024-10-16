@@ -63,99 +63,105 @@ export default function Map(props: {
 
   onCleanup(() => map()?.remove());
   return (
-    <>
-      <div id="map" class="h-[50vh] w-[50vw]" />
-      <button
-        onClick={() => {
-          const curUserMarker = userMarker();
-          if (!curUserMarker) return;
+    <div class="fixed bottom-0 right-0 mb-3 mr-3 flex min-h-[30vh] min-w-[30vw] flex-col-reverse items-center transition-all hover:min-h-[40vh] hover:min-w-[40vw]">
+      <Show when={solutionMarker()}>
+        <button
+          onClick={() => {
+            const curMap = map();
+            if (!curMap) return;
 
-          const curMap = map();
+            if (curMap.getLayer('routeLine')) {
+              curMap.removeLayer('routeLine');
+            }
+            if (!solutionMarker()) return;
 
-          if (!curMap) return;
-          const source = curMap.getSource('route') as maplibregl.GeoJSONSource;
-          if (!source) return;
-          if (solutionMarker()) return;
-          const newSolutionMarker = setSolutionMarker(() => {
-            return new maplibregl.Marker({
-              color: '#0AFF00',
-              draggable: false,
-            })
-              .setLngLat([props.data.latlong[1], props.data.latlong[0]])
-              .addTo(curMap);
-          });
+            setUserMarker((prev) => {
+              prev?.remove();
+              return undefined;
+            });
+            setSolutionMarker((prev) => {
+              prev?.remove();
+              return undefined;
+            });
+            setDistance(undefined);
+            props.nextMap();
+          }}
+          class="z-50 w-full rounded-lg bg-slate-700 px-4 py-2 text-left text-white hover:bg-slate-800"
+        >
+          Next
+        </button>
+      </Show>
+      <Show when={!solutionMarker()}>
+        <button
+          onClick={() => {
+            const curUserMarker = userMarker();
+            if (!curUserMarker) return;
 
-          source.setData({
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: [
-                curUserMarker.getLngLat().toArray(),
-                props.data.latlong.reverse() as [number, number],
-              ],
-            },
-          });
-          const distance = Math.floor(
-            Math.max(
-              0,
-              1000 -
-                curUserMarker
-                  .getLngLat()
-                  .distanceTo(newSolutionMarker.getLngLat()),
-            ),
-          );
-          props.setGameData((prev) => [...prev, distance]);
-          setDistance(distance);
-          curMap.addLayer({
-            id: 'routeLine',
-            type: 'line',
-            source: 'route',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
-            paint: {
-              'line-color': '#888',
-              'line-width': 8,
-            },
-          });
-        }}
-        class="absolute left-1/2 top-5 z-50 -translate-x-1/2 rounded-md bg-slate-700 px-3 py-2 text-white hover:bg-slate-800"
-      >
-        Submit
-      </button>
+            const curMap = map();
 
-      <button
-        onClick={() => {
-          const curMap = map();
-          if (!curMap) return;
+            if (!curMap) return;
+            const source = curMap.getSource(
+              'route',
+            ) as maplibregl.GeoJSONSource;
+            if (!source) return;
+            if (solutionMarker()) return;
+            const newSolutionMarker = setSolutionMarker(() => {
+              return new maplibregl.Marker({
+                color: '#0AFF00',
+                draggable: false,
+              })
+                .setLngLat([props.data.latlong[1], props.data.latlong[0]])
+                .addTo(curMap);
+            });
 
-          if (curMap.getLayer('routeLine')) {
-            curMap.removeLayer('routeLine');
-          }
-          if (!solutionMarker()) return;
+            source.setData({
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: [
+                  curUserMarker.getLngLat().toArray(),
+                  props.data.latlong.reverse() as [number, number],
+                ],
+              },
+            });
+            const distance = Math.floor(
+              Math.max(
+                0,
+                1000 -
+                  curUserMarker
+                    .getLngLat()
+                    .distanceTo(newSolutionMarker.getLngLat()),
+              ),
+            );
+            props.setGameData((prev) => [...prev, distance]);
+            setDistance(distance);
+            curMap.addLayer({
+              id: 'routeLine',
+              type: 'line',
+              source: 'route',
+              layout: {
+                'line-join': 'round',
+                'line-cap': 'round',
+              },
+              paint: {
+                'line-color': '#888',
+                'line-width': 8,
+              },
+            });
+          }}
+          class="z-50 w-full rounded-lg bg-slate-700 px-4 py-2 text-left text-white hover:bg-slate-800"
+        >
+          Submit
+        </button>
+      </Show>
 
-          setUserMarker((prev) => {
-            prev?.remove();
-            return undefined;
-          });
-          setSolutionMarker((prev) => {
-            prev?.remove();
-            return undefined;
-          });
-          setDistance(undefined);
-          props.nextMap();
-        }}
-        class="absolute left-1/2 top-20 z-50 -translate-x-1/2 rounded-md bg-slate-700 px-3 py-2 text-white hover:bg-slate-800"
-      >
-        Next
-      </button>
+      <div id="map" class="my-1 w-full flex-1 rounded-lg" />
       <Show when={distance()}>
-        <div class="absolute left-1/2 top-32 z-50 -translate-x-1/2 rounded-md bg-slate-700 px-3 py-2 text-white">
+        <div class="z-50 w-full rounded-lg bg-slate-700 px-3 py-2 text-white">
           {distance()}
         </div>
       </Show>
-    </>
+    </div>
   );
 }
