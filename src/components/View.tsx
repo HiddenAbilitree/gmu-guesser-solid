@@ -11,7 +11,7 @@ export type ViewProps = {
 export const View = (props: ViewProps) => {
   const [canvasElement, setCanvasElement] = createSignal<HTMLCanvasElement>();
   const [canvasScene, setCanvasScene] = createSignal<Scene>();
-  const [canvasCamera, setCanvasCamera] = createSignal<PerspectiveCamera>();
+  const [, setCanvasCamera] = createSignal<PerspectiveCamera>();
 
   createEffect(() => {
     const canvas = canvasElement();
